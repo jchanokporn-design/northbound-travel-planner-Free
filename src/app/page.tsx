@@ -1,9 +1,9 @@
 import TripSite from '@/components/trip-site';
-export default function Home(){ return <TripSite/>; }
 import Image from "next/image";
+
 export default function Home() {
   return (
-    <main>
+    <main className="relative min-h-screen">
       {/* ส่วน Header / Hero Section */}
       <div className="relative w-full h-[400px]">
         <Image
@@ -14,8 +14,9 @@ export default function Home() {
           className="object-cover"
         />
       </div>
-      
-      {/* เนื้อหาอื่นๆ ของเว็บ */}
+
+      {/* เนื้อหาหลักของเว็บไซต์ */}
+      <TripSite />
     </main>
   );
 }
