@@ -27,7 +27,7 @@ export function PlacePhoto({ query, day, className = '' }: { query:string; day:n
     return () => observer.disconnect();
   }, []);
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || day === 6) return;
     let live = true;
     fetch(`/api/place-photo?q=${encodeURIComponent(query)}`)
       .then(response => response.ok ? response.json() : null)
@@ -36,9 +36,13 @@ export function PlacePhoto({ query, day, className = '' }: { query:string; day:n
     return () => { live = false; };
   }, [query,ready]);
 
+  // Day 6 uses the exact orchard photo supplied by the user; do not replace it with a generic search result.
+  const userProvidedPhoto = day === 6;
   const fallback = `https://images.unsplash.com/${fallbacks[day] || 'photo-1464822759023-fed622ff2c3b'}?auto=format&fit=crop&w=1400&q=85`;
+  const imageSrc = userProvidedPhoto ? '/images/day-06-suan-som-na-rin.png' : (photo?.photoUri || fallback);
   return <div ref={host} className={`relative overflow-hidden ${className}`}>
-    <Image src={photo?.photoUri || fallback} alt={query} fill unoptimized className="object-cover transition-transform duration-700 hover:scale-105" sizes="(max-width:768px) 100vw, 50vw" />
-    {photo && <a href={photo.sourceUrl} target="_blank" rel="noreferrer" title={`${photo.credit} · ${photo.license}`} className="absolute bottom-2 right-2 max-w-[85%] truncate rounded-full bg-black/55 px-2 py-1 text-[9px] text-white hover:bg-black/75">ภาพ: {photo.credit} · {photo.license}</a>}
+    <Image src={imageSrc} alt={userProvidedPhoto ? 'สวนส้ม ณ รินทร์ อำเภอฝาง — ภาพถ่ายที่ผู้ใช้ส่งให้' : query} fill unoptimized className="object-cover transition-transform duration-700 hover:scale-105" sizes="(max-width:768px) 100vw, 50vw" />
+    {userProvidedPhoto && <span className="absolute bottom-2 right-2 rounded-full bg-black/55 px-2 py-1 text-[9px] text-white">ภาพจากผู้ใช้</span>}
+    {!userProvidedPhoto && photo && <a href={photo.sourceUrl} target="_blank" rel="noreferrer" title={`${photo.credit} · ${photo.license}`} className="absolute bottom-2 right-2 max-w-[85%] truncate rounded-full bg-black/55 px-2 py-1 text-[9px] text-white hover:bg-black/75">ภาพ: {photo.credit} · {photo.license}</a>}
   </div>;
 }

@@ -8,7 +8,7 @@ type Item={time:string;activity:string;distance:string;notes:string;gps:string};
 type Day={day:number;heading:string;route:string;items:Item[];notes:string[];mapLinks:string[]};
 const trip=data as any;
 const places=[
- ['เขาหน่อ · นครสวรรค์','Khao No mountain Nakhon Sawan Thailand'],['เขาหลวง · สุโขทัย','Khao Luang Ramkhamhaeng National Park Sukhothai Thailand'],['เชียงใหม่','Chiang Mai old city Thailand'],['เชียงใหม่ · ดอยสุเทพ','Doi Suthep Chiang Mai Thailand'],['ดอยหลวงเชียงดาว','Doi Luang Chiang Dao mountain Thailand'],['สวนส้ม ณ รินทร์ · ฝาง','orange orchard Fang Chiang Mai Thailand'],['โป่งน้ำร้อนฝาง · อ่างขาง','Fang hot spring Doi Ang Khang Thailand'],['วัดร่องขุ่น · ดอยช้าง','Wat Rong Khun Doi Chang Chiang Rai Thailand'],['ดอยช้าง · ดอยสะเก็ด · พร้าว','Doi Chang Chiang Rai Thailand'],['เขาโมอาย · อ่างเก็บน้ำแม่งัด','Mae Ngat Dam Thailand'],['แม่น้ำปิง · ตาก','Ping River Tak Thailand']
+ ['เขาหน่อ · นครสวรรค์','Khao No mountain Nakhon Sawan Thailand'],['เขาหลวง · สุโขทัย','Khao Luang Ramkhamhaeng National Park Sukhothai Thailand'],['เชียงใหม่','Chiang Mai old city Thailand'],['เชียงใหม่ · ดอยสุเทพ','Doi Suthep Chiang Mai Thailand'],['ดอยหลวงเชียงดาว','Doi Luang Chiang Dao mountain Thailand'],['สวนส้ม ณ รินทร์ · ฝาง','สวนส้ม ณ รินทร์ อำเภอฝาง เชียงใหม่'],['โป่งน้ำร้อนฝาง · อ่างขาง','Fang hot spring Doi Ang Khang Thailand'],['วัดร่องขุ่น · ดอยช้าง','Wat Rong Khun Doi Chang Chiang Rai Thailand'],['ดอยช้าง · ดอยสะเก็ด · พร้าว','Doi Chang Chiang Rai Thailand'],['เขาโมอาย · อ่างเก็บน้ำแม่งัด','Mae Ngat Dam Thailand'],['แม่น้ำปิง · ตาก','Ping River Tak Thailand']
 ];
 const money=(n:number)=>new Intl.NumberFormat('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
 const searchUrl=(q:string)=>`https://www.google.com/search?q=${encodeURIComponent(q+' Thailand')}`;
@@ -24,16 +24,16 @@ export default function TripSite(){
  ];
  const totalItems=categories.reduce((n,c)=>n+c.items.length,0); const percent=Math.round(checks.length/totalItems*100);
  const expenseRows=[
-  {category:'ที่พัก',item:'The Room Hotel กำแพงเพชร',paidBy:'SCB-0642',status:'Paid',amount:473.68},
+  {category:'ที่พัก',item:'The Room Hotel กำแพงเพชร',paidBy:'SCB-Card',status:'Paid',amount:473.68},
   {category:'กิจกรรม',item:'เครื่องนอน / อุปกรณ์เขาหลวง',paidBy:'Kept',status:'Paid',amount:180},
   {category:'ที่พัก',item:'เต็นท์เช่า อุทยานเขาหลวง',paidBy:'Kept',status:'Paid',amount:225},
-  {category:'ที่พัก',item:'ชิล โฮเทล ช้างเผือก',paidBy:'SCB-0642',status:'Paid',amount:2090.81},
-  {category:'ที่พัก',item:'กระท่อมดอยหลวง เชียงดาว',paidBy:'SCB-0642',status:'Paid',amount:645.73},
+  {category:'ที่พัก',item:'ชิล โฮเทล ช้างเผือก',paidBy:'SCB-Card',status:'Paid',amount:2090.81},
+  {category:'ที่พัก',item:'กระท่อมดอยหลวง เชียงดาว',paidBy:'SCB-Card',status:'Paid',amount:645.73},
   {category:'ที่พัก',item:'สวนส้ม ณ รินทร์ ฝาง',paidBy:'—',status:'Paid',amount:0},
   {category:'ที่พัก',item:'แสนเจริญ Camping ดอยช้าง',paidBy:'Kept',status:'Paid',amount:800},
   {category:'ที่พัก',item:'ภูผาโฮมสเตย์ พร้าว',paidBy:'Kept',status:'Paid',amount:400},
   {category:'กิจกรรม',item:'ล่องเรือและกิจกรรมเขาโมอาย (700 + 1,000 บาท)',paidBy:'ก่อนขึ้น',status:'Pending',amount:1700},
-  {category:'ที่พัก',item:'โรงแรมสวนสิน ล้านนา ตาก',paidBy:'SCB-0642',status:'Paid',amount:525.86},
+  {category:'ที่พัก',item:'โรงแรมสวนสิน ล้านนา ตาก',paidBy:'SCB-Card',status:'Paid',amount:525.86},
   {category:'น้ำมัน',item:'น้ำมัน Gasohol 95 ตลอดทริป',paidBy:'—',status:'Estimate',amount:8400},
   {category:'ทางด่วน',item:'ค่าทางด่วนตลอดทริป',paidBy:'—',status:'Estimate',amount:300},
   {category:'อาหารและเครื่องดื่ม',item:'ประมาณ 11 วัน × 1,000 บาท',paidBy:'—',status:'Estimate',amount:11000}
