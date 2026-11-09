@@ -1,107 +1,290 @@
 'use client';
-import { useMemo, useState } from 'react';
-import { ArrowLeft, ArrowRight, ArrowUpRight, CalendarDays, CarFront, Check, Clock3, ExternalLink, Footprints, MapPin, Mountain, Navigation, Route, Tent, Wallet, Search, ChevronRight } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowLeft, ArrowRight, ArrowUpRight, CalendarDays, Check, Clock3, ExternalLink, MapPin, Mountain, Navigation, Route, Wallet, Search, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import data from '@/lib/itinerary.json';
 
-type Item={time:string;activity:string;distance:string;notes:string;gps:string};
-type Day={day:number;heading:string;route:string;items:Item[];notes:string[];mapLinks:string[]};
-const trip=data as any;
+type Item = { time: string; activity: string; distance: string; notes: string; gps: string };
+type Day = { day: number; heading: string; route: string; items: Item[]; notes: string[]; mapLinks: string[] };
+const trip = data as any;
 
-// แมปภาพ local จาก public/images/ ตามวัน
-const dayImages: Record<number, string> = {
+// 1. ผูกรูปภาพหน้าปกของแต่ละวัน (Day 1 - 11) จากไฟล์ที่มีจริงใน public/images/
+const dayCoverImages: Record<number, string> = {
   1: '/images/day-01-khao-no-01.png',
   2: '/images/day-02-khao-luang-01.png',
   3: '/images/day-03-chiang-mai-01.png',
-  // วันอื่นๆ หากมีรูปในโฟลเดอร์ public/images/ สามารถมาเพิ่ม path ที่นี่ได้ครับ
+  4: '/images/day-04-doi-suthep-01.png',
+  5: '/images/day-05-doi-luang-chiang-dao-01.png',
+  6: '/images/day-06-suan-som-na-rin-01.png',
+  7: '/images/day-07-fang-ang-kang-01.png',
+  8: '/images/day-08-doi-chang-01.png',
+  9: '/images/day-09-doi-saket-01.png',
+  10: '/images/day-10-mae-ngad-dam-01.png',
+  11: '/images/day-11-ping-river-tak-01.png',
 };
 
-const places=[
-  ['เขาหน่อ · นครสวรรค์','Khao No mountain Nakhon Sawan Thailand'],
-  ['เขาหลวง · สุโขทัย','Khao Luang Ramkhamhaeng National Park Sukhothai Thailand'],
-  ['เชียงใหม่','Chiang Mai old city Thailand'],
-  ['เชียงใหม่ · ดอยสุเทพ','Doi Suthep Chiang Mai Thailand'],
-  ['ดอยหลวงเชียงดาว','Doi Luang Chiang Dao mountain Thailand'],
-  ['สวนส้ม ณ รินทร์ · ฝาง','สวนส้ม ณ รินทร์ อำเภอฝาง เชียงใหม่'],
-  ['โป่งน้ำร้อนฝาง · อ่างขาง','Fang hot spring Doi Ang Khang Thailand'],
-  ['วัดร่องขุ่น · ดอยช้าง','Wat Rong Khun Doi Chang Chiang Rai Thailand'],
-  ['ดอยช้าง · ดอยสะเก็ด · พร้าว','Doi Chang Chiang Rai Thailand'],
-  ['เขาโมอาย · อ่างเก็บน้ำแม่งัด','Mae Ngat Dam Thailand'],
-  ['แม่น้ำปิง · ตาก','Ping River Tak Thailand']
+// 2. รายการรูปภาพทั้งหมดของแต่ละวัน สำหรับแสดงในหน้ารายละเอียดเมื่อคลิกเข้าไป
+const dayGalleryImages: Record<number, string[]> = {
+  1: ['/images/day-01-khao-no-01.png', '/images/day-01-khao-no-02.png'],
+  2: ['/images/day-02-khao-luang-01.png', '/images/day-02-khao-luang-02.png'],
+  3: ['/images/day-03-chiang-mai-01.png', '/images/day-03-chiang-mai-02.png', '/images/day-03-chiang-mai-03.png', '/images/day-03-chiang-mai-04.png'],
+  4: ['/images/day-04-doi-suthep-01.png', '/images/day-04-doi-suthep-02.png', '/images/day-04-doi-kam-03.png'],
+  5: ['/images/day-05-doi-luang-chiang-dao-01.png'],
+  6: ['/images/day-06-suan-som-na-rin-01.png', '/images/day-06-suan-som-na-rin-02.png', '/images/day-06-suan-som-na-rin-03.png', '/images/day-06-suan-som-na-rin.png'],
+  7: ['/images/day-07-fang-ang-kang-01.png', '/images/day-07-fang-ang-kang-02.png', '/images/day-07-fang-hot-spring-01.png', '/images/day-07-fang-hot-spring-02.png'],
+  8: ['/images/day-08-doi-chang-01.png', '/images/day-08-doi-chang-02.png'],
+  9: ['/images/day-09-doi-saket-01.png', '/images/day-09-doi-saket-02.png', '/images/day-09-doi-saket-03.png'],
+  10: ['/images/day-10-mae-ngad-dam-01.png', '/images/day-10-mae-ngad-dam-02.png', '/images/day-10-mae-ngad-dam-03.png', '/images/day-10-mae-ngad-dam-04.png', '/images/day-10-mae-ngad-dam-05.png'],
+  11: ['/images/day-11-ping-river-tak-01.png', '/images/day-11-ping-river-tak-02.png', '/images/day-11-ping-river-tak-03.png'],
+};
+
+const places = [
+  ['เขาหน่อ · นครสวรรค์', 'Khao No mountain Nakhon Sawan Thailand'],
+  ['เขาหลวง · สุโขทัย', 'Khao Luang Ramkhamhaeng National Park Sukhothai Thailand'],
+  ['เชียงใหม่', 'Chiang Mai old city Thailand'],
+  ['เชียงใหม่ · ดอยสุเทพ', 'Doi Suthep Chiang Mai Thailand'],
+  ['ดอยหลวงเชียงดาว', 'Doi Luang Chiang Dao mountain Thailand'],
+  ['สวนส้ม ณ รินทร์ · ฝาง', 'สวนส้ม ณ รินทร์ อำเภอฝาง เชียงใหม่'],
+  ['โป่งน้ำร้อนฝาง · อ่างขาง', 'Fang hot spring Doi Ang Khang Thailand'],
+  ['วัดร่องขุ่น · ดอยช้าง', 'Wat Rong Khun Doi Chang Chiang Rai Thailand'],
+  ['ดอยช้าง · ดอยสะเก็ด · พร้าว', 'Doi Chang Chiang Rai Thailand'],
+  ['เขาโมอาย · อ่างเก็บน้ำแม่งัด', 'Mae Ngat Dam Thailand'],
+  ['แม่น้ำปิง · ตาก', 'Ping River Tak Thailand']
 ];
 
-const money=(n:number)=>new Intl.NumberFormat('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
-const searchUrl=(q:string)=>`https://www.google.com/search?q=${encodeURIComponent(q+' Thailand')}`;
-function linksIn(text:string){return [...text.matchAll(/https?:\/\/[^\s)]+/g)].map(m=>m[0].replace(/[.,]$/,''));}
-function LinkPill({url}:{url:string}){const map=/maps\.app|google\.com\/maps/i.test(url);return <a href={url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-full border border-[#d6e1d9] bg-[#f5f7f2] px-3 py-1.5 text-[11px] font-semibold text-[#285c52] hover:bg-[#e8f0e9]">{map?<Navigation size={12}/>:<ExternalLink size={12}/>} {map?'แผนที่':'เว็บ'}</a>}
+const money = (n: number) => new Intl.NumberFormat('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
+const searchUrl = (q: string) => `https://www.google.com/search?q=${encodeURIComponent(q + ' Thailand')}`;
+function linksIn(text: string) { return [...text.matchAll(/https?:\/\/[^\s)]+/g)].map(m => m[0].replace(/[.,]$/, '')); }
+function LinkPill({ url }: { url: string }) { const map = /maps\.app|google\.com\/maps/i.test(url); return <a href={url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-full border border-[#d6e1d9] bg-[#f5f7f2] px-3 py-1.5 text-[11px] font-semibold text-[#285c52] hover:bg-[#e8f0e9]">{map ? <Navigation size={12} /> : <ExternalLink size={12} />} {map ? 'แผนที่' : 'เว็บ'}</a>; }
 
-export default function TripSite(){
-  const [selected,setSelected]=useState<number|null>(null); 
-  const [checks,setChecks]=useState<string[]>([]);
-  
-  const categories=[
-    {title:'⛰️ เดินป่า & ปีนเขา',sub:'เขาหน่อ / เขาหลวง / เขาโมอาย',items:['รองเท้าเดินป่าพื้นยึดเกาะดี','ถุงเท้าสำรองและเสื้อผ้าแห้งเร็ว','ไฟฉายคาดศีรษะและถ่านสำรอง','ไม้ Trekking Pole','ถุงมือผ้าสำหรับจับบันไดเหล็ก','น้ำดื่มและเกลือแร่','ยาคลายกล้ามเนื้อและพลาสเตอร์']},
-    {title:'⛺ แคมป์ปิ้ง & ลานกางเต็นท์',items:['เต็นท์ / ตรวจสอบรายการเช่าเต็นท์','ถุงนอนและแผ่นรองนอน','ไฟฉายและโคมไฟแคมป์','Power bank','ผ้าเช็ดตัวและชุดเปลี่ยน','ถุงกันน้ำและถุงขยะ']},
-    {title:'🚗 เตรียมรถยนต์',sub:'ระยะทางประมาณ 2,400 กม.',items:['ตรวจเช็กยางและแรงดันลมยาง','ตรวจระบบเบรกและน้ำมันเบรก','ตรวจน้ำมันเครื่องและน้ำหล่อเย็น','ตรวจแบตเตอรี่และไฟส่องสว่าง','ยางอะไหล่ / แม่แรง / ประแจ','ประกันภัย / พ.ร.บ. / ใบขับขี่','เติมน้ำมันและวางแผนจุดพัก']},
-    {title:'🧳 ของใช้ทั่วไป & ยาประจำตัว',items:['บัตรประชาชนและเอกสารจองที่พัก','ยาประจำตัวและชุดปฐมพยาบาล','เสื้อกันหนาวและเสื้อกันฝน','หมวก แว่นกันแดด และครีมกันแดด','สายชาร์จและอะแดปเตอร์','เงินสดและบัตรชำระเงิน']}
+export default function TripSite() {
+  const [selected, setSelected] = useState<number | null>(null);
+  const [checks, setChecks] = useState<string[]>([]);
+
+  const categories = [
+    { title: '⛰️ เดินป่า & ปีนเขา', sub: 'เขาหน่อ / เขาหลวง / เขาโมอาย', items: ['รองเท้าเดินป่าพื้นยึดเกาะดี', 'ถุงเท้าสำรองและเสื้อผ้าแห้งเร็ว', 'ไฟฉายคาดศีรษะและถ่านสำรอง', 'ไม้ Trekking Pole', 'ถุงมือผ้าสำหรับจับบันไดเหล็ก', 'น้ำดื่มและเกลือแร่', 'ยาคลายกล้ามเนื้อและพลาสเตอร์'] },
+    { title: '⛺ แคมป์ปิ้ง & ลานกางเต็นท์', items: ['เต็นท์ / ตรวจสอบรายการเช่าเต็นท์', 'ถุงนอนและแผ่นรองนอน', 'ไฟฉายและโคมไฟแคมป์', 'Power bank', 'ผ้าเช็ดตัวและชุดเปลี่ยน', 'ถุงกันน้ำและถุงขยะ'] },
+    { title: '🚗 เตรียมรถยนต์', sub: 'ระยะทางประมาณ 2,400 กม.', items: ['ตรวจเช็กยางและแรงดันลมยาง', 'ตรวจระบบเบรกและน้ำมันเบรก', 'ตรวจน้ำมันเครื่องและน้ำหล่อเย็น', 'ตรวจแบตเตอรี่และไฟส่องสว่าง', 'ยางอะไหล่ / แม่แรง / ประแจ', 'ประกันภัย / พ.ร.บ. / ใบขับขี่', 'เติมน้ำมันและวางแผนจุดพัก'] },
+    { title: '🧳 ของใช้ทั่วไป & ยาประจำตัว', items: ['บัตรประชาชนและเอกสารจองที่พัก', 'ยาประจำตัวและชุดปฐมพยาบาล', 'เสื้อกันหนาวและเสื้อกันฝน', 'หมวก แว่นกันแดด และครีมกันแดด', 'สายชาร์จและอะแดปเตอร์', 'เงินสดและบัตรชำระเงิน'] }
   ];
-  const totalItems=categories.reduce((n,c)=>n+c.items.length,0); 
-  const percent=Math.round(checks.length/totalItems*100);
+  const totalItems = categories.reduce((n, c) => n + c.items.length, 0);
+  const percent = Math.round(checks.length / totalItems * 100);
 
-  const expenseRows=[
-    {category:'ที่พัก',item:'The Room Hotel กำแพงเพชร',paidBy:'SCB-Card',status:'Paid',amount:473.68},
-    {category:'กิจกรรม',item:'เครื่องนอน / อุปกรณ์เขาหลวง',paidBy:'Kept',status:'Paid',amount:180},
-    {category:'ที่พัก',item:'เต็นท์เช่า อุทยานเขาหลวง',paidBy:'Kept',status:'Paid',amount:225},
-    {category:'ที่พัก',item:'ชิล โฮเทล ช้างเผือก',paidBy:'SCB-Card',status:'Paid',amount:2090.81},
-    {category:'ที่พัก',item:'กระท่อมดอยหลวง เชียงดาว',paidBy:'SCB-Card',status:'Paid',amount:645.73},
-    {category:'ที่พัก',item:'สวนส้ม ณ รินทร์ ฝาง',paidBy:'—',status:'Paid',amount:0},
-    {category:'ที่พัก',item:'แสนเจริญ Camping ดอยช้าง',paidBy:'Kept',status:'Paid',amount:800},
-    {category:'ที่พัก',item:'ภูผาโฮมสเตย์ พร้าว',paidBy:'Kept',status:'Paid',amount:400},
-    {category:'กิจกรรม',item:'ล่องเรือและกิจกรรมเขาโมอาย (700 + 1,000 บาท)',paidBy:'ก่อนขึ้น',status:'Pending',amount:1700},
-    {category:'ที่พัก',item:'โรงแรมสวนสิน ล้านนา ตาก',paidBy:'SCB-Card',status:'Paid',amount:525.86},
-    {category:'น้ำมัน',item:'น้ำมัน Gasohol 95 ตลอดทริป',paidBy:'—',status:'Estimate',amount:8400},
-    {category:'ทางด่วน',item:'ค่าทางด่วนตลอดทริป',paidBy:'—',status:'Estimate',amount:300},
-    {category:'อาหารและเครื่องดื่ม',item:'ประมาณ 11 วัน × 1,000 บาท',paidBy:'—',status:'Estimate',amount:11000}
+  const expenseRows = [
+    { category: 'ที่พัก', item: 'The Room Hotel กำแพงเพชร', paidBy: 'SCB-Card', status: 'Paid', amount: 473.68 },
+    { category: 'กิจกรรม', item: 'เครื่องนอน / อุปกรณ์เขาหลวง', paidBy: 'Kept', status: 'Paid', amount: 180 },
+    { category: 'ที่พัก', item: 'เต็นท์เช่า อุทยานเขาหลวง', paidBy: 'Kept', status: 'Paid', amount: 225 },
+    { category: 'ที่พัก', item: 'ชิล โฮเทล ช้างเผือก', paidBy: 'SCB-Card', status: 'Paid', amount: 2090.81 },
+    { category: 'ที่พัก', item: 'กระท่อมดอยหลวง เชียงดาว', paidBy: 'SCB-Card', status: 'Paid', amount: 645.73 },
+    { category: 'ที่พัก', item: 'สวนส้ม ณ รินทร์ ฝาง', paidBy: '—', status: 'Paid', amount: 0 },
+    { category: 'ที่พัก', item: 'แสนเจริญ Camping ดอยช้าง', paidBy: 'Kept', status: 'Paid', amount: 800 },
+    { category: 'ที่พัก', item: 'ภูผาโฮมสเตย์ พร้าว', paidBy: 'Kept', status: 'Paid', amount: 400 },
+    { category: 'กิจกรรม', item: 'ล่องเรือและกิจกรรมเขาโมอาย (700 + 1,000 บาท)', paidBy: 'ก่อนขึ้น', status: 'Pending', amount: 1700 },
+    { category: 'ที่พัก', item: 'โรงแรมสวนสิน ล้านนา ตาก', paidBy: 'SCB-Card', status: 'Paid', amount: 525.86 },
+    { category: 'น้ำมัน', item: 'น้ำมัน Gasohol 95 ตลอดทริป', paidBy: '—', status: 'Estimate', amount: 8400 },
+    { category: 'ทางด่วน', item: 'ค่าทางด่วนตลอดทริป', paidBy: '—', status: 'Estimate', amount: 300 },
+    { category: 'อาหารและเครื่องดื่ม', item: 'ประมาณ 11 วัน × 1,000 บาท', paidBy: '—', status: 'Estimate', amount: 11000 }
   ];
 
-  const detail=trip.days.find((d:Day)=>d.day===selected) as Day|undefined;
-  const goDay=(n:number)=>{setSelected(n);window.scrollTo({top:0,behavior:'smooth'});};
+  const detail = trip.days.find((d: Day) => d.day === selected) as Day | undefined;
+  const goDay = (n: number) => { setSelected(n); window.scrollTo({ top: 0, behavior: 'smooth' }); };
 
   return <main className="min-h-screen bg-[#f7f5ef] text-[#173d39]">
-  <header className="sticky top-0 z-40 border-b border-[#e7e3d9] bg-[#fbfaf6]/95 backdrop-blur"><div className="mx-auto flex h-[68px] max-w-[1440px] items-center justify-between px-5 md:px-10"><a href="#home" onClick={()=>setSelected(null)} className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#244e47] text-white"><Mountain size={25}/></span><span className="leading-none"><b className="font-display text-[25px] tracking-tight">Northbound</b><small className="block pt-1 text-[9px] tracking-[.28em]">TRAVEL PLANNER</small></span></a><nav className="hidden items-center gap-8 text-[13px] font-medium md:flex"><a href="#home" onClick={()=>setSelected(null)} className="navlink">หน้าแรก</a><a href="#roadmap" onClick={()=>setSelected(null)} className="navlink">แผนที่เส้นทาง</a><a href="#days" onClick={()=>setSelected(null)} className="navlink">รายละเอียดรายวัน</a><a href="#budget" onClick={()=>setSelected(null)} className="navlink">ค่าใช้จ่าย</a><a href="#checklist" onClick={()=>setSelected(null)} className="navlink">เช็กลิสต์</a></nav><a href="#roadmap" onClick={()=>setSelected(null)} className="flex items-center gap-2 rounded-full bg-[#285c52] px-4 py-2.5 text-xs text-white"><Route size={15}/> Road Trip</a></div></header>
-  {detail? <section className="mx-auto max-w-[1200px] px-5 py-8 md:px-10 md:py-12"><button onClick={()=>setSelected(null)} className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#d7ded5] bg-white px-4 py-2.5 text-sm font-medium text-[#285c52] hover:bg-[#eef2eb]"><ArrowLeft size={16}/> กลับไปหน้าแผนการเดินทาง</button><div className="overflow-hidden rounded-[28px] bg-white shadow-sm"><div className="relative h-[260px] md:h-[400px]">
-    {/* แสดงภาพรายวันของหน้ารายละเอียด */}
-    <Image src={dayImages[detail.day] || '/images/cover-hero.png'} alt={detail.route} fill priority className="object-cover" />
-    <div className="absolute inset-0 bg-gradient-to-t from-[#102e2c]/85 via-transparent to-transparent"/><div className="absolute bottom-7 left-7 right-7 text-white md:left-10 md:bottom-10"><p className="text-xs tracking-[.25em]">{detail.heading}</p><h1 className="mt-2 max-w-4xl font-display text-3xl font-semibold md:text-5xl">{detail.route}</h1></div></div><div className="p-5 md:p-10"><div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e8e6de] pb-5"><div><p className="eyebrow">DAY {String(detail.day).padStart(2,'0')} · DAILY JOURNEY</p><p className="mt-2 text-sm text-[#71817b]">{detail.items.length} ช่วงกิจกรรม · แผนเดินทางตามข้อมูลต้นฉบับ</p></div><a href={searchUrl(places[detail.day-1][0])} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full bg-[#285c52] px-4 py-2.5 text-xs font-semibold text-white"><Search size={14}/> ดูเพิ่ม</a></div><div className="mt-3">{detail.items.map((it:Item,i:number)=>{const urls=[...linksIn(it.activity),...linksIn(it.notes),...(it.gps?[it.gps]:[])];const cleanNotes=it.notes.replace(/https?:\/\/[^\s)]+/g,'').trim();return <div key={i} className="grid gap-3 border-b border-dashed border-[#e3e4dc] py-5 last:border-0 md:grid-cols-[145px_1fr_190px]"><div className="flex items-center gap-2 text-sm font-bold tabular-nums text-[#b47b2f]"><Clock3 size={16}/>{it.time}</div><div><h3 className="font-semibold leading-6">{it.activity}</h3>{cleanNotes&&<p className="mt-1 whitespace-pre-line text-sm leading-7 text-[#71817b]">{cleanNotes}</p>}<div className="mt-2 flex flex-wrap gap-2"><a href={searchUrl(it.activity)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-full border border-[#e2d6bd] bg-[#faf6eb] px-3 py-1.5 text-[11px] font-semibold text-[#98713a]"><Search size={12}/> ดูเพิ่ม</a>{[...new Set(urls)].map((u:string)=><LinkPill key={u} url={u}/>)}</div></div><div className="flex items-start md:justify-end"><span className="rounded-full bg-[#f0eee5] px-3 py-1.5 text-[11px] text-[#6d7c74]">{it.distance||'—'}</span></div></div>})}</div>{detail.notes?.length>0&&<div className="mt-5 rounded-xl bg-[#f7f0df] p-4 text-sm leading-7 text-[#80602e]">{detail.notes.map((n:string,i:number)=><p key={i}>✦ {n}</p>)}</div>}<div className="mt-8 flex flex-wrap justify-between gap-3"><button disabled={detail.day===1} onClick={()=>goDay(detail.day-1)} className="rounded-full border border-[#d6e1d9] px-5 py-2.5 text-sm disabled:opacity-30">← วันก่อนหน้า</button><button disabled={detail.day===11} onClick={()=>goDay(detail.day+1)} className="rounded-full bg-[#285c52] px-5 py-2.5 text-sm text-white disabled:opacity-30">วันถัดไป →</button></div></div></div></section> : <>
-  {/* Header หน้าแรก ดึงภาพ /images/cover-hero.png มาทำเป็นภาพพื้นหลังแทนสีเขียว */}
-  <section id="home" className="relative isolate min-h-[520px] overflow-hidden md:min-h-[610px]">
-    <Image src="/images/cover-hero.png" alt="Cover Hero" fill priority className="absolute inset-0 -z-20 object-cover" />
-    <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#102e2c]/85 via-[#173b37]/50 to-transparent"/>
-    <div className="mx-auto flex min-h-[520px] max-w-[1440px] items-center px-7 py-16 md:min-h-[610px] md:px-16">
-      <div className="max-w-2xl text-white">
-        <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/10 px-4 py-2 text-xs tracking-widest backdrop-blur"><Mountain size={14}/> NORTHERN THAILAND · ROAD TRIP</div>
-        <p className="font-display text-6xl font-semibold leading-[.95] md:text-8xl">ทริปเหนือ</p>
-        <p className="mt-3 font-display text-4xl italic md:text-6xl">Road Trip <span className="font-sans text-3xl not-italic font-light">11 วัน 10 คืน</span></p>
-        <div className="mt-7 flex flex-wrap items-center gap-3"><span className="rounded-full bg-[#e4b66c] px-5 py-2.5 text-sm font-semibold text-[#233f39]">19 – 29 ธันวาคม 2569</span><span className="text-sm text-white/80">Bangkok → North → Bangkok</span></div>
-        <p className="mt-7 max-w-md text-sm leading-7 text-white/85">เก็บทุกเส้นทาง สร้างทุกความทรงจำ<br/>11 วันแห่งภูเขา สายหมอก และการเดินทาง</p>
-        <a href="#roadmap" className="mt-9 inline-flex items-center gap-3 rounded-full bg-white px-6 py-3 text-sm font-semibold text-[#214a43]">สำรวจแผนการเดินทาง <ArrowRight size={17}/></a>
+    <header className="sticky top-0 z-40 border-b border-[#e7e3d9] bg-[#fbfaf6]/95 backdrop-blur">
+      <div className="mx-auto flex h-[68px] max-w-[1440px] items-center justify-between px-5 md:px-10">
+        <a href="#home" onClick={() => setSelected(null)} className="flex items-center gap-3">
+          <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#244e47] text-white"><Mountain size={25} /></span>
+          <span className="leading-none"><b className="font-display text-[25px] tracking-tight">Northbound</b><small className="block pt-1 text-[9px] tracking-[.28em]">TRAVEL PLANNER</small></span>
+        </a>
+        <nav className="hidden items-center gap-8 text-[13px] font-medium md:flex">
+          <a href="#home" onClick={() => setSelected(null)} className="navlink">หน้าแรก</a>
+          <a href="#roadmap" onClick={() => setSelected(null)} className="navlink">แผนที่เส้นทาง</a>
+          <a href="#days" onClick={() => setSelected(null)} className="navlink">รายละเอียดรายวัน</a>
+          <a href="#budget" onClick={() => setSelected(null)} className="navlink">ค่าใช้จ่าย</a>
+          <a href="#checklist" onClick={() => setSelected(null)} className="navlink">เช็กลิสต์</a>
+        </nav>
+        <a href="#roadmap" onClick={() => setSelected(null)} className="flex items-center gap-2 rounded-full bg-[#285c52] px-4 py-2.5 text-xs text-white"><Route size={15} /> Road Trip</a>
       </div>
-    </div>
-  </section>
+    </header>
 
-  <section id="roadmap" className="mx-auto max-w-[1440px] px-5 py-14 md:px-10 md:py-20"><div className="mb-7"><p className="eyebrow">THE JOURNEY</p><h2 className="section-title">Roadmap <span>เส้นทางทริป 11 วัน 10 คืน</span></h2></div><div className="relative overflow-hidden rounded-[28px] bg-[#dbe7df] shadow-[0_20px_60px_rgba(35,68,57,.12)]">
-    <Image src="/images/cover-hero.png" alt="Roadmap Background" fill className="absolute inset-0 opacity-20 object-cover" />
-    <div className="absolute inset-0 bg-gradient-to-br from-[#edf0e7]/85 via-[#e7eee7]/70 to-[#b6cbbd]/80"/><div className="relative p-5 md:p-9"><div className="mb-5 flex flex-wrap items-end justify-between gap-2"><div><p className="font-display text-3xl italic text-[#244e47]">The Northern Journey</p><p className="mt-1 text-xs tracking-widest text-[#71847a]">BANGKOK · 19—29 DECEMBER 2026</p></div><p className="text-xs text-[#526d62]">11 DAYS · APPROX. 2,400 KM</p></div><svg viewBox="0 0 1100 330" className="mb-4 h-auto w-full" role="img" aria-label="เส้นทางการเดินทาง 11 วัน จากกรุงเทพฯ ขึ้นภาคเหนือและกลับกรุงเทพฯ"><path d="M45 255 C110 220 125 90 220 90 S330 240 405 210 S510 60 590 100 S710 250 785 205 S900 65 1045 100" fill="none" stroke="#fff" strokeWidth="18" strokeLinecap="round"/><path d="M45 255 C110 220 125 90 220 90 S330 240 405 210 S510 60 590 100 S710 250 785 205 S900 65 1045 100" fill="none" stroke="#315f53" strokeWidth="4" strokeDasharray="8 8" strokeLinecap="round"/>{trip.days.map((d:Day,i:number)=>{const pts=[[45,255],[135,140],[220,90],[310,145],[405,210],[500,155],[590,100],[690,150],[785,205],[900,65],[1045,100]];const [x,y]=pts[i];return <g key={d.day} onClick={()=>goDay(d.day)} className="cursor-pointer"><circle cx={x} cy={y} r="19" fill="#f8f5ec" stroke="#315f53" strokeWidth="3"/><text x={x} y={y+4} textAnchor="middle" fontSize="12" fontWeight="700" fill="#244e47">{d.day}</text><text x={x} y={y+(i%2===0?37:-30)} textAnchor="middle" fontSize="12" fontWeight="600" fill="#244e47">{['เขาหน่อ','เขาหลวง','เชียงใหม่','เชียงใหม่','เชียงดาว','ฝาง','ฝาง','วัดร่องขุ่น','ดอยช้าง','เขาโมอาย','ตาก'][i]}</text></g>})}</svg><div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">{trip.days.map((d:Day,i:number)=><button key={d.day} onClick={()=>goDay(d.day)} className="group rounded-xl border border-white/90 bg-white/85 p-3 text-left shadow-sm transition hover:-translate-y-1 hover:bg-white"><span className="text-[10px] font-bold tracking-widest text-[#b17a2d]">DAY {String(d.day).padStart(2,'0')}</span><span className="mt-1 block text-xs font-semibold leading-5 text-[#31584f]">{places[i][0]}</span><span className="mt-2 flex items-center gap-1 text-[10px] text-[#78877e]">ดูรายละเอียด <ChevronRight size={12}/></span></button>)}</div></div><div className="relative border-t border-white/70 bg-white/65 px-6 py-4 text-xs text-[#3d5d54]"><Route className="mr-2 inline" size={15}/>{trip.route}<span className="float-right font-semibold">{trip.distance}</span></div></div></section>
+    {detail ? (
+      /* หน้ารายละเอียดประจำวัน */
+      <section className="mx-auto max-w-[1200px] px-5 py-8 md:px-10 md:py-12">
+        <button onClick={() => setSelected(null)} className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#d7ded5] bg-white px-4 py-2.5 text-sm font-medium text-[#285c52] hover:bg-[#eef2eb]">
+          <ArrowLeft size={16} /> กลับไปหน้าแผนการเดินทาง
+        </button>
+        <div className="overflow-hidden rounded-[28px] bg-white shadow-sm">
+          <div className="relative h-[260px] md:h-[400px]">
+            <Image src={dayCoverImages[detail.day] || '/images/cover-hero.png'} alt={detail.route} fill priority className="object-cover object-top" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#102e2c]/85 via-transparent to-transparent" />
+            <div className="absolute bottom-7 left-7 right-7 text-white md:left-10 md:bottom-10">
+              <p className="text-xs tracking-[.25em]">{detail.heading}</p>
+              <h1 className="mt-2 max-w-4xl font-display text-3xl font-semibold md:text-5xl">{detail.route}</h1>
+            </div>
+          </div>
+          
+          <div className="p-5 md:p-10">
+            {/* 4. แสดงแกลเลอรีรูปภาพทั้งหมดของวันนั้นๆ */}
+            {dayGalleryImages[detail.day] && dayGalleryImages[detail.day].length > 0 && (
+              <div className="mb-8">
+                <p className="eyebrow mb-3">GALLERY · ภาพบรรยากาศสถานที่ ({dayGalleryImages[detail.day].length} ภาพ)</p>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+                  {dayGalleryImages[detail.day].map((imgSrc, imgIdx) => (
+                    <div key={imgIdx} className="relative h-48 w-full overflow-hidden rounded-2xl shadow-sm">
+                      <Image src={imgSrc} alt={`${detail.route} image ${imgIdx + 1}`} fill className="object-cover transition-transform duration-300 hover:scale-105" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
-  {/* การ์ดแสดงผลรายวัน ดึงภาพจาก dayImages */}
-  <section id="days" className="bg-[#eeece4] px-5 py-14 md:px-10 md:py-20"><div className="mx-auto max-w-[1440px]"><div className="mb-8"><p className="eyebrow">DAY BY DAY</p><h2 className="section-title">รายละเอียดการเดินทาง <span>เลือกวันเพื่อเปิดแผนรายวัน</span></h2></div><div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{trip.days.map((d:Day,i:number)=><article key={d.day} className="overflow-hidden rounded-2xl border border-[#e1dfd6] bg-[#fbfaf6] shadow-sm transition hover:-translate-y-1"><div className="relative h-48">
-    <Image src={dayImages[d.day] || '/images/cover-hero.png'} alt={places[i][0]} fill className="object-cover" />
-    <span className="absolute bottom-3 left-3 rounded-full bg-[#285c52] px-4 py-1.5 font-display text-lg italic text-white">Day {String(d.day).padStart(2,'0')}</span></div><div className="p-4"><div className="mb-2 flex items-center gap-2 text-xs text-[#9b7540]"><CalendarDays size={14}/>{d.heading.replace(/.*—/,'').trim()}</div><h3 className="min-h-[48px] text-[15px] font-semibold leading-6">{places[i][0]}</h3><p className="mt-2 line-clamp-2 text-xs leading-5 text-[#71817b]">{d.route}</p><button onClick={()=>goDay(d.day)} className="mt-4 flex w-full items-center justify-between border-t border-[#e9e6dc] pt-3 text-xs font-semibold text-[#2b5d52]">ดูรายละเอียด <ArrowUpRight size={15}/></button></div></article>)}</div></div></section>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e8e6de] pb-5">
+              <div>
+                <p className="eyebrow">DAY {String(detail.day).padStart(2, '0')} · DAILY JOURNEY</p>
+                <p className="mt-2 text-sm text-[#71817b]">{detail.items.length} ช่วงกิจกรรม · แผนเดินทางตามข้อมูลต้นฉบับ</p>
+              </div>
+              <a href={searchUrl(places[detail.day - 1][0])} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full bg-[#285c52] px-4 py-2.5 text-xs font-semibold text-white">
+                <Search size={14} /> ดูเพิ่ม
+              </a>
+            </div>
+            
+            <div className="mt-3">
+              {detail.items.map((it: Item, i: number) => {
+                const urls = [...linksIn(it.activity), ...linksIn(it.notes), ...(it.gps ? [it.gps] : [])];
+                const cleanNotes = it.notes.replace(/https?:\/\/[^\s)]+/g, '').trim();
+                return (
+                  <div key={i} className="grid gap-3 border-b border-dashed border-[#e3e4dc] py-5 last:border-0 md:grid-cols-[145px_1fr_190px]">
+                    <div className="flex items-center gap-2 text-sm font-bold tabular-nums text-[#b47b2f]"><Clock3 size={16} />{it.time}</div>
+                    <div>
+                      <h3 className="font-semibold leading-6">{it.activity}</h3>
+                      {cleanNotes && <p className="mt-1 whitespace-pre-line text-sm leading-7 text-[#71817b]">{cleanNotes}</p>}
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <a href={searchUrl(it.activity)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-full border border-[#e2d6bd] bg-[#faf6eb] px-3 py-1.5 text-[11px] font-semibold text-[#98713a]"><Search size={12} /> ดูเพิ่ม</a>
+                        {[...new Set(urls)].map((u: string) => <LinkPill key={u} url={u} />)}
+                      </div>
+                    </div>
+                    <div className="flex items-start md:justify-end">
+                      <span className="rounded-full bg-[#f0eee5] px-3 py-1.5 text-[11px] text-[#6d7c74]">{it.distance || '—'}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            
+            {detail.notes?.length > 0 && (
+              <div className="mt-5 rounded-xl bg-[#f7f0df] p-4 text-sm leading-7 text-[#80602e]">
+                {detail.notes.map((n: string, i: number) => <p key={i}>✦ {n}</p>)}
+              </div>
+            )}
+            
+            <div className="mt-8 flex flex-wrap justify-between gap-3">
+              <button disabled={detail.day === 1} onClick={() => goDay(detail.day - 1)} className="rounded-full border border-[#d6e1d9] px-5 py-2.5 text-sm disabled:opacity-30">← วันก่อนหน้า</button>
+              <button disabled={detail.day === 11} onClick={() => goDay(detail.day + 1)} className="rounded-full bg-[#285c52] px-5 py-2.5 text-sm text-white disabled:opacity-30">วันถัดไป →</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    ) : (
+      /* หน้าหลักเว็บไซต์ */
+      <>
+        {/* 2. จัดตำแหน่งภาพ cover-hero.png โดยใส่ object-top เพื่อป้องกันไม่ให้หัวคนหลุดขอบ */}
+        <section id="home" className="relative isolate min-h-[550px] overflow-hidden md:min-h-[640px]">
+          <Image src="/images/cover-hero.png" alt="Cover Hero" fill priority className="absolute inset-0 -z-20 object-cover object-top" />
+          <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#102e2c]/80 via-[#173b37]/45 to-transparent" />
+          <div className="mx-auto flex min-h-[550px] max-w-[1440px] items-center px-7 py-16 md:min-h-[640px] md:px-16">
+            <div className="max-w-2xl text-white">
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/10 px-4 py-2 text-xs tracking-widest backdrop-blur"><Mountain size={14} /> NORTHERN THAILAND · ROAD TRIP</div>
+              <p className="font-display text-6xl font-semibold leading-[.95] md:text-8xl">ทริปเหนือ</p>
+              <p className="mt-3 font-display text-4xl italic md:text-6xl">Road Trip <span className="font-sans text-3xl not-italic font-light">11 วัน 10 คืน</span></p>
+              <div className="mt-7 flex flex-wrap items-center gap-3"><span className="rounded-full bg-[#e4b66c] px-5 py-2.5 text-sm font-semibold text-[#233f39]">19 – 29 ธันวาคม 2569</span><span className="text-sm text-white/80">Bangkok → North → Bangkok</span></div>
+              <p className="mt-7 max-w-md text-sm leading-7 text-white/85">เก็บทุกเส้นทาง สร้างทุกความทรงจำ<br />11 วันแห่งภูเขา สายหมอก และการเดินทาง</p>
+              <a href="#roadmap" className="mt-9 inline-flex items-center gap-3 rounded-full bg-white px-6 py-3 text-sm font-semibold text-[#214a43]">สำรวจแผนการเดินทาง <ArrowRight size={17} /></a>
+            </div>
+          </div>
+        </section>
 
-  <section id="budget" className="mx-auto max-w-[1440px] px-5 py-14 md:px-10 md:py-20"><div className="rounded-[26px] border border-[#e3e0d6] bg-white p-6 md:p-9"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="eyebrow">BUDGET PLANNER</p><h2 className="mt-2 text-2xl font-semibold">รายละเอียดค่าใช้จ่ายทริป</h2></div><Wallet size={26} className="text-[#b17a36]"/></div><div className="mt-6 grid gap-4 md:grid-cols-3"><div className="rounded-2xl bg-[#234f47] p-5 text-white md:col-span-2"><p className="text-xs tracking-widest text-[#c5d8c9]">TOTAL ESTIMATED TRIP COST</p><p className="mt-2 text-4xl font-semibold tabular-nums">{money(26741.08)} ฿</p><p className="mt-1 text-xs text-white/70">ยอดรวมค่าใช้จ่ายทั้งหมดโดยประมาณ</p></div><div className="grid grid-cols-2 gap-3"><div className="rounded-2xl bg-[#f2f0e8] p-4"><p className="text-xs text-[#77877e]">Paid / recorded</p><b className="mt-2 block text-xl">{money(5341.08)} ฿</b></div><div className="rounded-2xl bg-[#f8f2e5] p-4"><p className="text-xs text-[#98713a]">Estimate</p><b className="mt-2 block text-xl">{money(19700)} ฿</b></div></div></div><div className="mt-7 overflow-x-auto"><table className="w-full min-w-[760px] border-collapse text-left text-sm"><thead><tr className="border-b border-[#e8e6de] text-xs text-[#829089]"><th className="px-3 py-3">หมวด</th><th className="px-3 py-3">รายการ</th><th className="px-3 py-3">Paid by</th><th className="px-3 py-3">สถานะ</th><th className="px-3 py-3 text-right">จำนวนเงิน</th></tr></thead><tbody>{expenseRows.map((r,i)=><tr key={i} className="border-b border-[#efede6] last:border-0"><td className="px-3 py-3 font-medium">{r.category}</td><td className="px-3 py-3 text-[#64786f]">{r.item}</td><td className="px-3 py-3 text-[#64786f]">{r.paidBy}</td><td className="px-3 py-3"><span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${r.status==='Paid'?'bg-[#e6f0e8] text-[#356b4d]':r.status==='Pending'?'bg-[#fbefdc] text-[#9a6b22]':'bg-[#edf0f2] text-[#64727a]'}`}>{r.status}</span></td><td className="px-3 py-3 text-right font-semibold tabular-nums">{money(r.amount)} ฿</td></tr>)}</tbody></table></div><p className="mt-4 text-xs leading-6 text-[#8b968f]">ยอดรวมอ้างอิงจากประมาณการใน Excel: ที่พัก 5,161.08 + กิจกรรม 1,880 + น้ำมัน 8,400 + ทางด่วน 300 + อาหารและเครื่องดื่ม 11,000 บาท ทั้งนี้สถานะ Paid/Pending/Estimate จัดตามข้อมูลผู้ชำระและลักษณะรายการในต้นฉบับ</p></div></section>
-  <section id="checklist" className="bg-[#e8ece4] px-5 py-14 md:px-10 md:py-20"><div className="mx-auto max-w-[1440px]"><p className="eyebrow">BEFORE YOU GO</p><h2 className="section-title">เช็กลิสต์เตรียมตัว <span>พร้อมแล้ว {checks.length} / {totalItems} รายการ ({percent}%)</span></h2><div className="mt-6 h-2 overflow-hidden rounded-full bg-white"><div className="h-full rounded-full bg-[#2c6659] transition-all" style={{width:`${percent}%`}}/></div><div className="mt-7 grid gap-5 md:grid-cols-2">{categories.map(cat=><div key={cat.title} className="rounded-2xl border border-white bg-[#fbfaf6] p-5 shadow-sm"><h3 className="text-lg font-semibold text-[#31594f]">{cat.title}</h3>{cat.sub&&<p className="mt-1 text-xs text-[#8a968e]">{cat.sub}</p>}<div className="mt-4 space-y-2">{cat.items.map(x=><label key={x} className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 text-sm transition ${checks.includes(x)?'border-[#a8c5b3] bg-[#dce9df] text-[#688076]':'border-[#eeece4] bg-white text-[#34584f]'}`}><input type="checkbox" checked={checks.includes(x)} onChange={e=>setChecks(old=>e.target.checked?[...old,x]:old.filter(y=>y!==x))} className="h-4 w-4 accent-[#285c52]"/><span className={checks.includes(x)?'line-through':''}>{x}</span>{checks.includes(x)&&<Check size={15} className="ml-auto"/>}</label>)}</div></div>)}</div><div className="relative mt-7 overflow-hidden rounded-[26px] bg-[#dce6dc] p-7 md:p-10">
-    <Image src="/images/cover-hero.png" alt="Footer Banner Background" fill className="absolute inset-0 opacity-20 object-cover" />
-    <div className="relative"><p className="font-display text-4xl italic text-[#31594f]">Take the scenic route.</p><p className="mt-3 max-w-2xl text-sm leading-7 text-[#64786f]">ขับขี่ปลอดภัย พักเมื่อเหนื่อย และเผื่อเวลาให้ทุกความทรงจำระหว่างทาง</p><div className="mt-7 flex flex-wrap items-center gap-3 text-xs text-[#75877e]"><span>19 — 29 DECEMBER 2026</span><span>·</span><span>GOOD VIBES · GREAT JOURNEY</span><span>·</span><span>2,400 KM</span></div></div></div></div></section>
-  </>}
-  <footer className="bg-[#1e4841] px-5 py-8 text-white md:px-10"><div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-4"><div className="font-display text-2xl italic">Northbound <span className="ml-2 font-sans text-[10px] tracking-[.2em] not-italic">TRAVEL PLANNER</span></div><p className="text-xs text-white/65">Good Vibes · Great Journey · Better Together</p><button onClick={()=>{setSelected(null);window.scrollTo({top:0,behavior:'smooth'})}} className="flex items-center gap-2 text-xs text-white/80">กลับหน้าแรก <ArrowUpRight size={14}/></button></div></footer></main>
+        <section id="roadmap" className="mx-auto max-w-[1440px] px-5 py-14 md:px-10 md:py-20">
+          <div className="mb-7"><p className="eyebrow">THE JOURNEY</p><h2 className="section-title">Roadmap <span>เส้นทางทริป 11 วัน 10 คืน</span></h2></div>
+          <div className="relative overflow-hidden rounded-[28px] bg-[#dbe7df] shadow-[0_20px_60px_rgba(35,68,57,.12)]">
+            <Image src="/images/cover-hero.png" alt="Roadmap Background" fill className="absolute inset-0 opacity-20 object-cover object-center" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#edf0e7]/85 via-[#e7eee7]/70 to-[#b6cbbd]/80" />
+            <div className="relative p-5 md:p-9">
+              <div className="mb-5 flex flex-wrap items-end justify-between gap-2">
+                <div><p className="font-display text-3xl italic text-[#244e47]">The Northern Journey</p><p className="mt-1 text-xs tracking-widest text-[#71847a]">BANGKOK · 19—29 DECEMBER 2026</p></div>
+                <p className="text-xs text-[#526d62]">11 DAYS · APPROX. 2,400 KM</p>
+              </div>
+              <svg viewBox="0 0 1100 330" className="mb-4 h-auto w-full" role="img" aria-label="เส้นทางการเดินทาง 11 วัน จากกรุงเทพฯ ขึ้นภาคเหนือและกลับกรุงเทพฯ"><path d="M45 255 C110 220 125 90 220 90 S330 240 405 210 S510 60 590 100 S710 250 785 205 S900 65 1045 100" fill="none" stroke="#fff" strokeWidth="18" strokeLinecap="round" /><path d="M45 255 C110 220 125 90 220 90 S330 240 405 210 S510 60 590 100 S710 250 785 205 S900 65 1045 100" fill="none" stroke="#315f53" strokeWidth="4" strokeDasharray="8 8" strokeLinecap="round" />{trip.days.map((d: Day, i: number) => { const pts = [[45, 255], [135, 140], [220, 90], [310, 145], [405, 210], [500, 155], [590, 100], [690, 150], [785, 205], [900, 65], [1045, 100]]; const [x, y] = pts[i]; return <g key={d.day} onClick={() => goDay(d.day)} className="cursor-pointer"><circle cx={x} cy={y} r="19" fill="#f8f5ec" stroke="#315f53" strokeWidth="3" /><text x={x} y={y + 4} textAnchor="middle" fontSize="12" fontWeight="700" fill="#244e47">{d.day}</text><text x={x} y={y + (i % 2 === 0 ? 37 : -30)} textAnchor="middle" fontSize="12" fontWeight="600" fill="#244e47">{['เขาหน่อ', 'เขาหลวง', 'เชียงใหม่', 'เชียงใหม่', 'เชียงดาว', 'ฝาง', 'ฝาง', 'วัดร่องขุ่น', 'ดอยช้าง', 'เขาโมอาย', 'ตาก'][i]}</text></g>; })}</svg>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+                {trip.days.map((d: Day, i: number) => <button key={d.day} onClick={() => goDay(d.day)} className="group rounded-xl border border-white/90 bg-white/85 p-3 text-left shadow-sm transition hover:-translate-y-1 hover:bg-white"><span className="text-[10px] font-bold tracking-widest text-[#b17a2d]">DAY {String(d.day).padStart(2, '0')}</span><span className="mt-1 block text-xs font-semibold leading-5 text-[#31584f]">{places[i][0]}</span><span className="mt-2 flex items-center gap-1 text-[10px] text-[#78877e]">ดูรายละเอียด <ChevronRight size={12} /></span></button>)}
+              </div>
+            </div>
+            <div className="relative border-t border-white/70 bg-white/65 px-6 py-4 text-xs text-[#3d5d54]"><Route className="mr-2 inline" size={15} />{trip.route}<span className="float-right font-semibold">{trip.distance}</span></div>
+          </div>
+        </section>
+
+        {/* 3. การ์ดแสดงผลรายวัน ดึงภาพปกจาก dayCoverImages ตามไฟล์จริงใน public/images/ */}
+        <section id="days" className="bg-[#eeece4] px-5 py-14 md:px-10 md:py-20">
+          <div className="mx-auto max-w-[1440px]">
+            <div className="mb-8"><p className="eyebrow">DAY BY DAY</p><h2 className="section-title">รายละเอียดการเดินทาง <span>เลือกวันเพื่อเปิดแผนรายวัน</span></h2></div>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {trip.days.map((d: Day, i: number) => (
+                <article key={d.day} className="overflow-hidden rounded-2xl border border-[#e1dfd6] bg-[#fbfaf6] shadow-sm transition hover:-translate-y-1">
+                  <div className="relative h-48">
+                    <Image src={dayCoverImages[d.day] || '/images/cover-hero.png'} alt={places[i][0]} fill className="object-cover object-top" />
+                    <span className="absolute bottom-3 left-3 rounded-full bg-[#285c52] px-4 py-1.5 font-display text-lg italic text-white">Day {String(d.day).padStart(2, '0')}</span>
+                  </div>
+                  <div className="p-4">
+                    <div className="mb-2 flex items-center gap-2 text-xs text-[#9b7540]"><CalendarDays size={14} />{d.heading.replace(/.*—/, '').trim()}</div>
+                    <h3 className="min-h-[48px] text-[15px] font-semibold leading-6">{places[i][0]}</h3>
+                    <p className="mt-2 line-clamp-2 text-xs leading-5 text-[#71817b]">{d.route}</p>
+                    <button onClick={() => goDay(d.day)} className="mt-4 flex w-full items-center justify-between border-t border-[#e9e6dc] pt-3 text-xs font-semibold text-[#2b5d52]">ดูรายละเอียด <ArrowUpRight size={15} /></button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="budget" className="mx-auto max-w-[1440px] px-5 py-14 md:px-10 md:py-20">
+          <div className="rounded-[26px] border border-[#e3e0d6] bg-white p-6 md:p-9">
+            <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="eyebrow">BUDGET PLANNER</p><h2 className="mt-2 text-2xl font-semibold">รายละเอียดค่าใช้จ่ายทริป</h2></div><Wallet size={26} className="text-[#b17a36]" /></div>
+            <div className="mt-6 grid gap-4 md:grid-cols-3">
+              <div className="rounded-2xl bg-[#234f47] p-5 text-white md:col-span-2"><p className="text-xs tracking-widest text-[#c5d8c9]">TOTAL ESTIMATED TRIP COST</p><p className="mt-2 text-4xl font-semibold tabular-nums">{money(26741.08)} ฿</p><p className="mt-1 text-xs text-white/70">ยอดรวมค่าใช้จ่ายทั้งหมดโดยประมาณ</p></div>
+              <div className="grid grid-cols-2 gap-3"><div className="rounded-2xl bg-[#f2f0e8] p-4"><p className="text-xs text-[#77877e]">Paid / recorded</p><b className="mt-2 block text-xl">{money(5341.08)} ฿</b></div><div className="rounded-2xl bg-[#f8f2e5] p-4"><p className="text-xs text-[#98713a]">Estimate</p><b className="mt-2 block text-xl">{money(19700)} ฿</b></div></div>
+            </div>
+            <div className="mt-7 overflow-x-auto">
+              <table className="w-full min-w-[760px] border-collapse text-left text-sm">
+                <thead><tr className="border-b border-[#e8e6de] text-xs text-[#829089]"><th className="px-3 py-3">หมวด</th><th className="px-3 py-3">รายการ</th><th className="px-3 py-3">Paid by</th><th className="px-3 py-3">สถานะ</th><th className="px-3 py-3 text-right">จำนวนเงิน</th></tr></thead>
+                <tbody>{expenseRows.map((r, i) => <tr key={i} className="border-b border-[#efede6] last:border-0"><td className="px-3 py-3 font-medium">{r.category}</td><td className="px-3 py-3 text-[#64786f]">{r.item}</td><td className="px-3 py-3 text-[#64786f]">{r.paidBy}</td><td className="px-3 py-3"><span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${r.status === 'Paid' ? 'bg-[#e6f0e8] text-[#356b4d]' : r.status === 'Pending' ? 'bg-[#fbefdc] text-[#9a6b22]' : 'bg-[#edf0f2] text-[#64727a]'}`}>{r.status}</span></td><td className="px-3 py-3 text-right font-semibold tabular-nums">{money(r.amount)} ฿</td></tr>)}</tbody>
+              </table>
+            </div>
+            <p className="mt-4 text-xs leading-6 text-[#8b968f]">ยอดรวมอ้างอิงจากประมาณการใน Excel: ที่พัก 5,161.08 + กิจกรรม 1,880 + น้ำมัน 8,400 + ทางด่วน 300 + อาหารและเครื่องดื่ม 11,000 บาท ทั้งนี้สถานะ Paid/Pending/Estimate จัดตามข้อมูลผู้ชำระและลักษณะรายการในต้นฉบับ</p>
+          </div>
+        </section>
+
+        <section id="checklist" className="bg-[#e8ece4] px-5 py-14 md:px-10 md:py-20">
+          <div className="mx-auto max-w-[1440px]">
+            <p className="eyebrow">BEFORE YOU GO</p>
+            <h2 className="section-title">เช็กลิสต์เตรียมตัว <span>พร้อมแล้ว {checks.length} / {totalItems} รายการ ({percent}%)</span></h2>
+            <div className="mt-6 h-2 overflow-hidden rounded-full bg-white"><div className="h-full rounded-full bg-[#2c6659] transition-all" style={{ width: `${percent}%` }} /></div>
+            <div className="mt-7 grid gap-5 md:grid-cols-2">
+              {categories.map(cat => <div key={cat.title} className="rounded-2xl border border-white bg-[#fbfaf6] p-5 shadow-sm"><h3 className="text-lg font-semibold text-[#31594f]">{cat.title}</h3>{cat.sub && <p className="mt-1 text-xs text-[#8a968e]">{cat.sub}</p>}<div className="mt-4 space-y-2">{cat.items.map(x => <label key={x} className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 text-sm transition ${checks.includes(x) ? 'border-[#a8c5b3] bg-[#dce9df] text-[#688076]' : 'border-[#eeece4] bg-white text-[#34584f]'}`}><input type="checkbox" checked={checks.includes(x)} onChange={e => setChecks(old => e.target.checked ? [...old, x] : old.filter(y => y !== x))} className="h-4 w-4 accent-[#285c52]" /><span className={checks.includes(x) ? 'line-through' : ''}>{x}</span>{checks.includes(x) && <Check size={15} className="ml-auto" />}</label>)}</div></div>)}
+            </div>
+            <div className="relative mt-7 overflow-hidden rounded-[26px] bg-[#dce6dc] p-7 md:p-10">
+              <Image src="/images/cover-hero.png" alt="Footer Banner Background" fill className="absolute inset-0 opacity-20 object-cover object-top" />
+              <div className="relative"><p className="font-display text-4xl italic text-[#31594f]">Take the scenic route.</p><p className="mt-3 max-w-2xl text-sm leading-7 text-[#64786f]">ขับขี่ปลอดภัย พักเมื่อเหนื่อย และเผื่อเวลาให้ทุกความทรงจำระหว่างทาง</p><div className="mt-7 flex flex-wrap items-center gap-3 text-xs text-[#75877e]"><span>19 — 29 DECEMBER 2026</span><span>·</span><span>GOOD VIBES · GREAT JOURNEY</span><span>·</span><span>2,400 KM</span></div></div>
+            </div>
+          </div>
+        </section>
+      </>
+    )}
+
+    <footer className="bg-[#1e4841] px-5 py-8 text-white md:px-10">
+      <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-4">
+        <div className="font-display text-2xl italic">Northbound <span className="ml-2 font-sans text-[10px] tracking-[.2em] not-italic">TRAVEL PLANNER</span></div>
+        <p className="text-xs text-white/65">Good Vibes · Great Journey · Better Together</p>
+        <button onClick={() => { setSelected(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="flex items-center gap-2 text-xs text-white/80">กลับหน้าแรก <ArrowUpRight size={14} /></button>
+      </div>
+    </footer>
+  </main>;
 }
