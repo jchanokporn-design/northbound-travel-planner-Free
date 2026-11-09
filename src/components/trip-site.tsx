@@ -1,6 +1,10 @@
 'use client';
 import { useState } from 'react';
-import { ArrowLeft, ArrowRight, ArrowUpRight, CalendarDays, Check, Clock3, ExternalLink, Mountain, Navigation, Route, Wallet, Search, ChevronRight, X, ChevronLeft, ZoomIn, ZoomOut } from 'lucide-react';
+import { 
+  ArrowLeft, ArrowRight, ArrowUpRight, CalendarDays, Check, Clock3, 
+  ExternalLink, Mountain, Navigation, Route, Wallet, Search, 
+  ChevronRight, X, ChevronLeft, ZoomIn, ZoomOut 
+} from 'lucide-react';
 import Image from 'next/image';
 import data from '@/lib/itinerary.json';
 
@@ -55,7 +59,14 @@ const places = [
 const money = (n: number) => new Intl.NumberFormat('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
 const searchUrl = (q: string) => `https://www.google.com/search?q=${encodeURIComponent(q + ' Thailand')}`;
 function linksIn(text: string) { return [...text.matchAll(/https?:\/\/[^\s)]+/g)].map(m => m[0].replace(/[.,]$/, '')); }
-function LinkPill({ url }: { url: string }) { const map = /maps\.app|google\.com\/maps/i.test(url); return <a href={url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-full border border-[#d6e1d9] bg-[#f5f7f2] px-3 py-1.5 text-[11px] font-semibold text-[#285c52] hover:bg-[#e8f0e9]">{map ? <Navigation size={12} /> : <ExternalLink size={12} />} {map ? 'แผนที่' : 'เว็บ'}</a>; }
+function LinkPill({ url }: { url: string }) { 
+  const map = /maps\.app|google\.com\/maps/i.test(url); 
+  return (
+    <a href={url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-full border border-[#d6e1d9] bg-[#f5f7f2] px-3 py-1.5 text-[11px] font-semibold text-[#285c52] hover:bg-[#e8f0e9]">
+      {map ? <Navigation size={12} /> : <ExternalLink size={12} />} {map ? 'แผนที่' : 'เว็บ'}
+    </a>
+  ); 
+}
 
 export default function TripSite() {
   const [selected, setSelected] = useState<number | null>(null);
@@ -114,8 +125,13 @@ export default function TripSite() {
       <header className="sticky top-0 z-40 border-b border-[#e7e3d9] bg-[#fbfaf6]/95 backdrop-blur">
         <div className="mx-auto flex h-[60px] md:h-[68px] max-w-[1440px] items-center justify-between px-4 md:px-10">
           <a href="#home" onClick={() => setSelected(null)} className="flex items-center gap-2 md:gap-3">
-            <span className="grid h-8 w-8 md:h-10 md:w-10 place-items-center rounded-xl bg-[#244e47] text-white"><Mountain size={20} className="md:w-6 md:h-6" /></span>
-            <span className="leading-none"><b className="font-display text-lg md:text-[25px] tracking-tight">Northbound</b><small className="block pt-0.5 text-[8px] md:text-[9px] tracking-[.28em]">TRAVEL PLANNER</small></span>
+            <span className="grid h-8 w-8 md:h-10 md:w-10 place-items-center rounded-xl bg-[#244e47] text-white">
+              <Mountain size={20} className="md:w-6 md:h-6" />
+            </span>
+            <span className="leading-none">
+              <b className="font-display text-lg md:text-[25px] tracking-tight">Northbound</b>
+              <small className="block pt-0.5 text-[8px] md:text-[9px] tracking-[.28em]">TRAVEL PLANNER</small>
+            </span>
           </a>
           <nav className="hidden items-center gap-8 text-[13px] font-medium md:flex">
             <a href="#home" onClick={() => setSelected(null)} className="navlink">หน้าแรก</a>
@@ -124,7 +140,9 @@ export default function TripSite() {
             <a href="#budget" onClick={() => setSelected(null)} className="navlink">ค่าใช้จ่าย</a>
             <a href="#checklist" onClick={() => setSelected(null)} className="navlink">เช็กลิสต์</a>
           </nav>
-          <a href="#roadmap" onClick={() => setSelected(null)} className="flex items-center gap-1.5 rounded-full bg-[#285c52] px-3 py-1.5 md:px-4 md:py-2.5 text-xs text-white"><Route size={14} /> Road Trip</a>
+          <a href="#roadmap" onClick={() => setSelected(null)} className="flex items-center gap-1.5 rounded-full bg-[#285c52] px-3 py-1.5 md:px-4 md:py-2.5 text-xs text-white">
+            <Route size={14} /> Road Trip
+          </a>
         </div>
       </header>
 
@@ -136,54 +154,10 @@ export default function TripSite() {
           </button>
           <div className="overflow-hidden rounded-[20px] md:rounded-[28px] bg-white shadow-sm">
             <div className="relative h-[220px] sm:h-[300px] md:h-[400px]">
-              <Image src={dayCoverImages[detail.day] || '/images/cover-hero.png'} alt={detail.route} fill priority className="object-cover object-top" />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#102e2c]/90 via-[#102e2c]/30 to-transparent" />
-              <div className="absolute bottom-4 left-4 right-4 text-white md:left-10 md:bottom-10">
-                <p className="text-[10px] md:text-xs tracking-[.25em] opacity-90">{detail.heading}</p>
-                <h1 className="mt-1 md:mt-2 max-w-4xl font-display text-xl sm:text-3xl font-semibold md:text-5xl">{detail.route}</h1>
-              </div>
-            </div>
-            
-            <div className="p-4 sm:p-6 md:p-10">
-              {currentGallery.length > 0 && (
-                <div className="mb-8">
-                  <p className="eyebrow mb-3 text-xs md:text-sm">GALLERY · ภาพบรรยากาศสถานที่ ({currentGallery.length} ภาพ)</p>
-                  <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4">
-                    {currentGallery.map((imgSrc, imgIdx) => (
-                      <div 
-                        key={imgIdx} 
-                        onClick={() => { setLightboxIndex(imgIdx); setIsZoomed(false); }} 
-                        className="group relative h-32 sm:h-40 md:h-48 w-full cursor-pointer overflow-hidden rounded-xl md:rounded-2xl shadow-sm bg-gray-100"
-                      >
-                        <Image src={imgSrc} alt={`${detail.route} image ${imgIdx + 1}`} fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
-                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
-                          <ZoomIn size={22} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e8e6de] pb-4">
-                <div>
-                  <p className="eyebrow text-xs">DAY {String(detail.day).padStart(2, '0')} · DAILY JOURNEY</p>
-                  <p className="mt-1 text-xs md:text-sm text-[#71817b]">{detail.items.length} ช่วงกิจกรรม · แผนเดินทางตามข้อมูลต้นฉบับ</p>
-                </div>
-                <a href={searchUrl(places[detail.day - 1][0])} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full bg-[#285c52] px-3.5 py-2 text-xs font-semibold text-white">
-                  <Search size={13} /> ดูเพิ่ม
-                </a>
-              </div>
-              
-              <div className="mt-3">
-                {detail.items.map((it: Item, i: number) => {
-                  const urls = [...linksIn(it.activity), ...linksIn(it.notes), ...(it.gps ? [it.gps] : [])];
-                  const cleanNotes = it.notes.replace(/https?:\/\/[^\s)]+/g, '').trim();
-                  return (
-                    <div key={i} className="grid gap-2 border-b border-dashed border-[#e3e4dc] py-4 last:border-0 md:grid-cols-[145px_1fr_190px]">
-                      <div className="flex items-center gap-1.5 text-xs md:text-sm font-bold tabular-nums text-[#b47b2f]"><Clock3 size={15} />{it.time}</div>
-                      <div>
-                        <h3 className="text-sm md:text-base font-semibold leading-6">{it.activity}</h3>
-                        {cleanNotes && <p className="mt-1 whitespace-pre-line text-xs md:text-sm leading-6 md:leading-7 text-[#71817b]">{cleanNotes}</p>}
-                        <div className="mt-2 flex flex-wrap gap-1.5">
-                          <a href={searchUrl(it.activity)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-full border border-[#e2d6bd] bg-[#faf6eb] px-2.5 py-1 text-[10px] md:text-[11px] font-semibold text-[#98713a]"><Search size={1
+              <Image 
+                src={dayCoverImages[detail.day] || '/images/cover-hero.png'} 
+                alt={detail.route} 
+                fill 
+                priority 
+                className="object-cover object-top" 
+              />
