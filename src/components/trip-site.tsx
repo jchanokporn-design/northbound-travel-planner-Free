@@ -299,8 +299,37 @@ export default function TripSite() {
             <h2 className="section-title text-xl md:text-3xl">เช็กลิสต์เตรียมตัว <span>พร้อมแล้ว {checks.length} / {totalItems} รายการ ({percent}%)</span></h2>
             <div className="mt-4 md:mt-6 h-2 overflow-hidden rounded-full bg-white"><div className="h-full rounded-full bg-[#2c6659] transition-all" style={{ width: `${percent}%` }} /></div>
             <div className="mt-5 md:mt-7 grid gap-4 md:grid-cols-2">
-              {categories.map(cat => <div key={cat.title} className="rounded-2xl border border-white bg-[#fbfaf6] p-4 md:p-5 shadow-sm"><h3 className="text-base md:text-lg font-semibold text-[#31594f]">{cat.title}</h3>{cat.sub && <p className="mt-0.5 text-xs text-[#8a968e]">{cat.sub}</p>}<div className="mt-3 space-y-2">{cat.items.map(x => <label key={x} className={`flex cursor-pointer items-center gap-2.5 rounded-xl border p-2.5 md:p-3 text-xs md:text-sm transition ${checks.includes(x) ? 'border-[#a8c5b3] bg-[#dce9df] text-[#688076]' : 'border-[#eeece4] bg-white text-[#34584f]'}`}><input type="checkbox" checked={checks.includes(x)} onChange={e => setChecks(old => e.target.checked ? [...old, x] : old.filter(y => y !== x))} className="h-3.5 w-3.5 md:h-4 md:w-4 accent-[#285c52]" /><span className={checks.includes(x) ? 'line-through' : ''}>{x}</span>{checks.includes(x) && <Check size={14} className="ml-auto" strokeWidth={2.5} /></label>)}</div></div>)}
-            </div>
+             {categories.map((cat) => (
+  <div key={cat.title} className="rounded-2xl border border-white bg-[#fbfaf6] p-4 md:p-5 shadow-sm">
+    <h3 className="text-base md:text-lg font-semibold text-[#31594f]">{cat.title}</h3>
+    {cat.sub && <p className="mt-0.5 text-xs text-[#8a968e]">{cat.sub}</p>}
+    <div className="mt-3 space-y-2">
+      {cat.items.map((x) => {
+        const isChecked = checks.includes(x);
+        return (
+          <label
+            key={x}
+            className={`flex cursor-pointer items-center gap-2.5 rounded-xl border p-2.5 md:p-3 text-xs md:text-sm transition ${
+              isChecked ? 'border-[#a8c5b3] bg-[#dce9df] text-[#688076]' : 'border-[#eeece4] bg-white text-[#34584f]'
+            }`}
+          >
+            <input
+              type="checkbox"
+              checked={isChecked}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setChecks((old) => (checked ? [...old, x] : old.filter((y) => y !== x)));
+              }}
+              className="h-3.5 w-3.5 md:h-4 md:w-4 accent-[#285c52]"
+            />
+            <span className={isChecked ? 'line-through' : ''}>{x}</span>
+            {isChecked && <Check size={14} className="ml-auto" strokeWidth={2.5} />}
+          </label>
+        );
+      })}
+    </div>
+  </div>
+))}
           </div>
         </section>
       </>
